@@ -3,5 +3,5 @@ COMPONENT_ADD_INCLUDEDIRS = .
 ifdef CONFIG_IDF_TARGET_ESP8266
 COMPONENT_DEPENDS = esp8266
 else
-COMPONENT_DEPENDS = driver hd44780 pcf8574 screen button RTC_Date_Time
+COMPONENT_DEPENDS = driver hd44780 pcf8574 display_lcd_16x2 button RTC_Date_Time
 endif

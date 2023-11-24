@@ -1,13 +1,13 @@
 #ifndef __SCREEN_H__
 #define __SCREEN_H__
 
+#include <string.h>
 #include <esp_err.h>
 #include <esp_log.h>
 
-#include <string.h>
+#include <i2cdev.h>
 #include <hd44780.h>
 #include <pcf8574.h>
-
 
 /**
  * Content descriptor struct
@@ -20,13 +20,12 @@ typedef struct {
     bool blink;
 } ContentMessage;
 
-
 /**
  * @brief Inicialization screen
  *
  * @return `ESP_OK` on success
  */
-void init_lcd();
+void display_lcd_16x2_init();
 
 
 /**
@@ -39,10 +38,10 @@ void init_lcd();
  * @param blink Bool flag to blink character
  * @return `ESP_OK` on success
  */
-void write_lcd(char *s, int row, int col, bool clear, bool blink);
+void display_lcd_16x2_write(char *s, int row, int col, bool clear, bool blink);
 
-void clear_lcd();
+void display_lcd_16x2_clear();
 
-void blink_cursor(int row, int col);
+void display_lcd_16x2_blink_cursor(int row, int col);
 
 #endif /* __COMPONENTS_BUTTON_H__ */

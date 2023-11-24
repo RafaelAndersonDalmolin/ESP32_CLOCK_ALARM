@@ -1,0 +1,85 @@
+menu "Central"
+
+    menu "Button GPIO Configuration"
+        config BUTTON_ACTIVATE_DEACTIVATE
+            int "GPIO for Button ACTIVATE AND DEACTIVATE"
+            range 0 39
+            default 32
+            help
+            Enter the GPIO pin number for the ACTIVATE_DEACTIVATE button.
+        
+        config BUTTON_BACK
+            int "GPIO for Button BACK"
+            range 0 39
+            default 35
+            help
+            Enter the GPIO pin number for the BACK button.
+        
+        config BUTTON_MODE
+            int "GPIO for Button MODE"
+            range 0 39
+            default 34
+            help
+            Enter the GPIO pin number for the MODE button.
+        
+        config BUTTON_DOWN
+            int "GPIO for Button DOWN"
+            range 0 39
+            default 39
+            help
+            Enter the GPIO pin number for the DOWN button.
+        
+        config BUTTON_UP
+            int "GPIO for Button UP"
+            range 0 39
+            default 36
+            help
+            Enter the GPIO pin number for the UP button.
+        
+    endmenu  # Fim do tópico "Button GPIO Configuration"
+
+    menu "DS3231 Configuration "
+        config DS3231_ADDR_I2C_ADDR
+            hex "I2C address of PCF8574"
+            default 0x68
+            help
+            Enter the device address PCF8574
+    
+        config DS3231_I2C_MASTER_SDA
+            int "SDA GPIO Number"
+            range 0 39
+            default 21 
+            help
+            GPIO number for I2C Master data line.         
+    
+        config DS3231_I2C_MASTER_SCL
+            int "SCL GPIO Number"
+            default 22
+            range 0 39
+            help
+                GPIO number for I2C Master clock line.
+    
+        config DS3231_I2C_CLOCK_HZ
+            int "I2C clock frequency, Hz"
+            default 400000
+    
+    endmenu  # Fim do tópico "DS3231 Configuration"
+
+    menu "Datatimer manager RTC Configuration"
+        config DATATIMER_TIME_DEBOUNCING_US
+            int "Debouncing time in milliseconds"
+            default 15
+            help
+            Enter the debouncing time in milliseconds for button presses.
+            
+        config DATATIMER_SIZE_IDENTIFIERS
+            int "Maximum nunber of tasks that can be notified"
+            default 5
+    
+        config DATATIMER_GPIO_ALARM
+            int "Gpio for alarm interruption"
+            default 18
+    
+    endmenu  # Fim do tópico "DATATIMER Configuration"
+
+endmenu # Fim do tópico principal "Central"
