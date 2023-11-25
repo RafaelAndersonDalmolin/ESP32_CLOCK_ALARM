@@ -41,7 +41,7 @@ typedef struct{
 } ds3231_clock_t;
 
 
-esp_err_t DS3231_DateTime_Manager_install(gpio_num_t i2c_master_sda, gpio_num_t i2c_master_scl, gpio_num_t gpio_interrupt, alarm_rate_t alarm_rate);
+esp_err_t DS3231_DateTime_Manager_install(alarm_rate_t alarm_rate);
 
 esp_err_t DS3231_DateTime_Manager_uninstall();
 

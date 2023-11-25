@@ -1,8 +1,6 @@
 #include "RTC_Date_Time.h"
 
 #define ESP_INTR_FLAG_DEFAULT      0   /**< Default flag for GPIO interrupt configuration. */
-#define TIME_DEBOUNCING_US         15  /**< Debouncing time in microseconds (15ms). */
-#define SIZE_IDENTIFIERS           5   /**< Maximum number of identifiers that can be installed. */
 
 //Variavel para armazenamento atual da data e hora 
 struct tm CurrentDateTime = {
@@ -30,7 +28,7 @@ ds3231_clock_t device_data_time = {
 i2c_dev_t ds3231;
 
 //task identifiers
-TaskHandle_t *taskHandle[SIZE_IDENTIFIERS];
+TaskHandle_t *taskHandle[CONFIG_DATATIMER_SIZE_IDENTIFIERS];
 short int size_taskHandle = 0;    
 
 void IRAM_ATTR rtcAlarmISR(void* arg){
@@ -57,7 +55,7 @@ void vTimer_alam_RTC(TimerHandle_t xTimer){
             }
             xSemaphoreGive(device_data_time.dateTimeMutex);
             if(size_taskHandle != 0){
-                for (int i = 0; i < SIZE_IDENTIFIERS; i++) {
+                for (int i = 0; i < CONFIG_DATATIMER_SIZE_IDENTIFIERS; i++) {
                     if(taskHandle[i] != NULL){
                         xTaskNotifyGive(*(taskHandle[i])); // Send notification to Task 1
                         // vTaskNotifyGiveFromISR(*(taskHandle[i]), &HigherPriorityTaskWoken); // Send notification to Task 1
@@ -139,7 +137,7 @@ esp_err_t DS3231_DateTime_Manager_get_date_time(struct tm *time){
 
 esp_err_t DS3231_DateTime_Manager_task_notify_add(TaskHandle_t *taskToUpdateHandle){
     
-    for (int i = 0; i < SIZE_IDENTIFIERS; i++) {
+    for (int i = 0; i < CONFIG_DATATIMER_SIZE_IDENTIFIERS; i++) {
         if(taskHandle[i] == NULL){
             taskHandle[i] = taskToUpdateHandle;
             size_taskHandle ++;
@@ -152,7 +150,7 @@ esp_err_t DS3231_DateTime_Manager_task_notify_add(TaskHandle_t *taskToUpdateHand
 
 esp_err_t DS3231_DateTime_Manager_task_notify_remove(TaskHandle_t *taskToUpdateHandle){
     
-    for (int i = 0; i < SIZE_IDENTIFIERS; i++) {
+    for (int i = 0; i < CONFIG_DATATIMER_SIZE_IDENTIFIERS; i++) {
         printf("taskHandle_t for\n");
         if(taskHandle[i] != NULL){
             if(taskHandle[i] == taskToUpdateHandle){
@@ -167,11 +165,11 @@ esp_err_t DS3231_DateTime_Manager_task_notify_remove(TaskHandle_t *taskToUpdateH
     return ESP_FAIL;
 }
 
-esp_err_t init_ds3231(gpio_num_t i2c_master_sda, gpio_num_t i2c_master_scl){
+esp_err_t init_ds3231(){
     //inclui zeros na regiao de memoria da variavel do device i2c
         memset(&ds3231, 0, sizeof(i2c_dev_t));
         //inicia descritor do RTC ds3231
-        ESP_ERROR_CHECK(ds3231_init_desc(&ds3231, 0, i2c_master_sda, i2c_master_scl));
+        ESP_ERROR_CHECK(ds3231_init_desc(&ds3231));
 
         //configura hora e data inicial
         //Na primeira inicializacao setar uma data e hora random, depois nao configurar para nao perder a hora atual
@@ -180,16 +178,16 @@ esp_err_t init_ds3231(gpio_num_t i2c_master_sda, gpio_num_t i2c_master_scl){
         return ESP_OK;
 }
 
-esp_err_t DS3231_DateTime_Manager_install(gpio_num_t i2c_master_sda, gpio_num_t i2c_master_scl, gpio_num_t gpio_interrupt, alarm_rate_t alarm_rate){
+esp_err_t DS3231_DateTime_Manager_install(alarm_rate_t alarm_rate){
     
     if(device_data_time.installed == false){
         //iniciando vetor de identificadores das tarefas
-        for (int i = 0; i < SIZE_IDENTIFIERS; i++) {
+        for (int i = 0; i < CONFIG_DATATIMER_SIZE_IDENTIFIERS; i++) {
             taskHandle[i] = NULL;
         }
 
         //iniciando device ds3231 i2c, a partir deste momento ja esta pronto para se comunicar via i2c
-        ESP_ERROR_CHECK(init_ds3231(i2c_master_sda, i2c_master_scl));
+        ESP_ERROR_CHECK(init_ds3231());
 
         device_data_time.dateTimeMutex = xSemaphoreCreateMutex();
         if(device_data_time.dateTimeMutex == NULL ){
@@ -197,7 +195,7 @@ esp_err_t DS3231_DateTime_Manager_install(gpio_num_t i2c_master_sda, gpio_num_t 
             return ESP_FAIL;
         }
 
-        device_data_time.Timer_Alarm = xTimerCreate("timer alarm RTC", pdMS_TO_TICKS(TIME_DEBOUNCING_US), pdFALSE,(void *) gpio_interrupt, vTimer_alam_RTC);
+        device_data_time.Timer_Alarm = xTimerCreate("timer alarm RTC", pdMS_TO_TICKS(CONFIG_DATATIMER_TIME_DEBOUNCING_US), pdFALSE,(void *) CONFIG_DATATIMER_GPIO_ALARM, vTimer_alam_RTC);
         if(device_data_time.Timer_Alarm == NULL ){
             ESP_ERROR_CHECK(ds3231_free_desc(&ds3231));
             vSemaphoreDelete(device_data_time.dateTimeMutex);
@@ -205,7 +203,7 @@ esp_err_t DS3231_DateTime_Manager_install(gpio_num_t i2c_master_sda, gpio_num_t 
         }  
 
         //configura pino para interrupcao gerada pelo alarme
-        ESP_ERROR_CHECK(rtc_config_gpio(gpio_interrupt));
+        ESP_ERROR_CHECK(rtc_config_gpio(CONFIG_DATATIMER_GPIO_ALARM));
         //instala servico de interrupcao
         //check de retorno para caso servico ja esta instalado
         // ESP_ERROR_CHECK(gpio_install_isr_service(ESP_INTR_FLAG_DEFAULT));
@@ -213,7 +211,7 @@ esp_err_t DS3231_DateTime_Manager_install(gpio_num_t i2c_master_sda, gpio_num_t 
         ESP_ERROR_CHECK(DS3231_DateTime_Manager_set_alarm(alarm_rate));
 
         //adiciona interrupcao ao pino configurado
-        ESP_ERROR_CHECK(gpio_isr_handler_add(gpio_interrupt, rtcAlarmISR, (void*) gpio_interrupt));
+        ESP_ERROR_CHECK(gpio_isr_handler_add(CONFIG_DATATIMER_GPIO_ALARM, rtcAlarmISR, (void*) CONFIG_DATATIMER_GPIO_ALARM));
         //adicionar true em install
         device_data_time.installed = true;
         return ESP_OK;
@@ -226,7 +224,7 @@ esp_err_t DS3231_DateTime_Manager_install(gpio_num_t i2c_master_sda, gpio_num_t 
 
 esp_err_t DS3231_DateTime_Manager_uninstall(){
 
-    for (int i = 0; i < SIZE_IDENTIFIERS; i++) {
+    for (int i = 0; i < CONFIG_DATATIMER_SIZE_IDENTIFIERS; i++) {
         printf("taskHandle_t uninstall\n");
         if(taskHandle[i] != NULL){
             taskHandle[i] = NULL;

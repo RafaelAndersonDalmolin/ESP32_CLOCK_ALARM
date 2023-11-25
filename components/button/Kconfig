@@ -1,4 +1,4 @@
-menu "Button"
+menu "Button Configuration"
     config SIZE_BUTTONS
         int "Maximum number of buttons that can be installed"
         range 1 10

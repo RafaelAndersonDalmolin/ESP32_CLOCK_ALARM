@@ -1,4 +1,4 @@
-menu "PCF8574 Configuration to communicate with HD44780"
+menu "PCF8574 Configuration"
     config PCF8574_I2C_ADDR
         hex "I2C address of PCF8574"
         default 0x27
