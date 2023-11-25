@@ -6,6 +6,6 @@ endif()
 
 idf_component_register(
     SRCS hd44780.c
-    INCLUDE_DIRS .
+    INCLUDE_DIRS "include"
     REQUIRES ${req}
 )
