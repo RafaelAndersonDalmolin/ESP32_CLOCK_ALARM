@@ -5,8 +5,9 @@
 #include "button.h"
 #include "display_lcd_16x2.h"
 #include "menu.h"
-// #include "RTC_Date_Time.h"
-                                                                                      
+#include "RTC_Date_Time.h"
+#include "wifi_manager.h"
+
 /* @brief tag used for ESP serial console messages */
 static const char* MAIN= "MAIN";
 
@@ -66,7 +67,7 @@ void starting_buttons(){
 }
 
 int app_main() {
-
+    
     starting_buttons();
 
     ESP_ERROR_CHECK(i2cdev_init());
@@ -77,8 +78,11 @@ int app_main() {
 
     ESP_ERROR_CHECK(DS3231_DateTime_Manager_install(EVERY_SECOND));
 
+    /* start the wifi manager */
+	wifi_manager_start();
+
     /* your code should go here. Here we simply create a task on core 2 that monitors free heap memory */
 	xTaskCreatePinnedToCore(&monitoring_task, "monitoring_task", 2048, NULL, 1, NULL, 1);
-    
+
     return 0;
 }

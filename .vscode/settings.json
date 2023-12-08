@@ -5,6 +5,7 @@
         "menu.h": "c",
         "stdint.h": "c",
         "rtc_date_time.h": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "wifi_manager.h": "c"
     }
 }
