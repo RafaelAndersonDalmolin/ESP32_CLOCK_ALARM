@@ -1,15 +1,15 @@
-menu "Datatimer manager RTC Configuration"
-    config DATATIMER_TIME_DEBOUNCING_US
+menu "Datatimer manager Configuration"
+    config TIME_DEBOUNCING_US
         int "Debouncing time in milliseconds"
         default 15
         help
         Enter the debouncing time in milliseconds for button presses.
         
-    config DATATIMER_SIZE_IDENTIFIERS
+    config SIZE_IDENTIFIERS
         int "Maximum nunber of tasks that can be notified"
         default 5
 
-    config DATATIMER_GPIO_ALARM
+    config GPIO_ALARM
         int "Gpio for alarm interruption"
         default 18
 
