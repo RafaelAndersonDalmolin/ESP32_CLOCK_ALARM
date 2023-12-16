@@ -16,7 +16,8 @@
 #define WIFI_SYMBOL         '\x0C'
 #define ALARME_SYMBOL       '\x0D'
 
-extern const char *MENU;
+static const char* MENU= "menu";
+
 ButtonNotification *receive_action;
 
 TaskHandle_t myTaskHandle;
@@ -24,29 +25,12 @@ TaskHandle_t myTaskHandle;
 int current_frame = 0;
 int current_nested_frame = 0;
 
-int option = 1;
+int option = 2;
 
-struct tm datetime_aux = {
-    .tm_sec = 0, //representa os segundos de 0 a 59
-    .tm_min = 0, //representa os minutos de 0 a 59
-    .tm_hour = 22, //representa as horas de 0 a 23
-    .tm_wday = 3, //dia da semana de 0 (domingo) até 6 (sábado)
-    .tm_mday = 27, //dia do mês de 1 a 31
-    .tm_mon = 9, //representa os meses do ano de 0 a 11
-    .tm_year = 123, //representa o ano a partir de 1900
-    .tm_yday = 0, // dia do ano de 1 a 365
-    .tm_isdst = 0 //indica horário de verão se for diferente de zero
-};
+struct tm datetime_aux;
 
 int current_day = 3;
 char string_time[16];
-
-typedef struct {
-    int linha;
-    int coluna;
-    char *weekday;
-} Posicao;
-Posicao pos[7];
 
 char *week[] = {"DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SAB"};
 
@@ -61,20 +45,20 @@ void frame_set_time() {
     bool next_frame = true;
     current_nested_frame = 1;
 
-    write_lcd("DATA", 0, 0, true, false);
-    write_lcd(week[datetime_aux.tm_wday], 0, 7, false, false);
-    write_lcd("HORA", 0, 11, false, false);
+    display_lcd_16x2_write("DATA", 0, 0, true, false);
+    display_lcd_16x2_write(week[datetime_aux.tm_wday], 0, 7, false, false);
+    display_lcd_16x2_write("HORA", 0, 11, false, false);
 
-    DS3231_DateTime_Manager_get_date_time(&datetime_aux);
+    date_time_manager_get_date_time(&datetime_aux);
 
     sprintf(string_time, "%02d-%02d-", datetime_aux.tm_mday, datetime_aux.tm_mon);
-    write_lcd(string_time, 1, 0, false, false);
+    display_lcd_16x2_write(string_time, 1, 0, false, false);
 
     sprintf(string_time, "%04d", (datetime_aux.tm_year + 1900));
-    write_lcd(string_time, 1, 6, false, false);
+    display_lcd_16x2_write(string_time, 1, 6, false, false);
 
     sprintf(string_time, "%02d:%02d", datetime_aux.tm_hour, datetime_aux.tm_min);
-    write_lcd(string_time, 1, 11, false, false);
+    display_lcd_16x2_write(string_time, 1, 11, false, false);
 
     while (next_frame) {
         switch (current_nested_frame) {
@@ -83,7 +67,7 @@ void frame_set_time() {
                 col = 0;
                 while (true) {
                     sprintf(string_time, "%02d", datetime_aux.tm_mday);
-                    write_lcd(string_time, row, col, false, false);
+                    display_lcd_16x2_write(string_time, row, col, false, false);
 
                     if (xQueueReceive(queue_button, &receive_action, pdMS_TO_TICKS(500))) {
                         if (receive_action->button_num == BUTTON_CIMA) {
@@ -102,8 +86,9 @@ void frame_set_time() {
                             current_nested_frame++;
                             break;
                         }
+                        free(receive_action);
                     } else {
-                        write_lcd("  ", row, col, false, false);
+                        display_lcd_16x2_write("  ", row, col, false, false);
                         vTaskDelay(pdMS_TO_TICKS(250));
                     }
                 }
@@ -114,7 +99,7 @@ void frame_set_time() {
                 col = 3;
                 while (true) {
                     sprintf(string_time, "%02d", datetime_aux.tm_mon);
-                    write_lcd(string_time, row, col, false, false);
+                    display_lcd_16x2_write(string_time, row, col, false, false);
 
                     if (xQueueReceive(queue_button, &receive_action, pdMS_TO_TICKS(500))) {
                         if (receive_action->button_num == BUTTON_CIMA) {
@@ -137,7 +122,7 @@ void frame_set_time() {
                             break;
                         }
                     } else {
-                        write_lcd("  ", row, col, false, false);
+                        display_lcd_16x2_write("  ", row, col, false, false);
                         vTaskDelay(pdMS_TO_TICKS(250));
                     }
                 }
@@ -149,7 +134,7 @@ void frame_set_time() {
                 col = 6;
                 while (true) {
                     sprintf(string_time, "%04d", datetime_aux.tm_year + 1900);
-                    write_lcd(string_time, row, col, false, false);
+                    display_lcd_16x2_write(string_time, row, col, false, false);
 
                     if (xQueueReceive(queue_button, &receive_action, pdMS_TO_TICKS(500))) {
                         if (receive_action->button_num == BUTTON_CIMA) {
@@ -164,7 +149,7 @@ void frame_set_time() {
                             break;
                         }
                     } else {
-                        write_lcd("    ", row, col, false, false);
+                        display_lcd_16x2_write("    ", row, col, false, false);
                         vTaskDelay(pdMS_TO_TICKS(250));
                     }
                 }
@@ -175,7 +160,7 @@ void frame_set_time() {
                 col = 7;
                 while (true) {
                     datetime_aux.tm_wday = current_day;
-                    write_lcd(week[datetime_aux.tm_wday], row, col, false, false);
+                    display_lcd_16x2_write(week[datetime_aux.tm_wday], row, col, false, false);
 
                     if (xQueueReceive(queue_button, &receive_action, pdMS_TO_TICKS(500))) {
                         if (receive_action->button_num == BUTTON_CIMA) {
@@ -198,7 +183,7 @@ void frame_set_time() {
                             break;
                         }
                     } else {
-                        write_lcd("   ", row, col, false, false);
+                        display_lcd_16x2_write("   ", row, col, false, false);
                         vTaskDelay(pdMS_TO_TICKS(250));
                     }
                 }
@@ -209,7 +194,7 @@ void frame_set_time() {
                 col = 11;
                 while (true) {
                     sprintf(string_time, "%02d", datetime_aux.tm_hour);
-                    write_lcd(string_time, row, col, false, false);
+                    display_lcd_16x2_write(string_time, row, col, false, false);
 
                     if (xQueueReceive(queue_button, &receive_action, pdMS_TO_TICKS(500))) {
                         if (receive_action->button_num == BUTTON_CIMA) {
@@ -232,7 +217,7 @@ void frame_set_time() {
                             break;
                         }
                     } else {
-                        write_lcd("  ", row, col, false, false);
+                        display_lcd_16x2_write("  ", row, col, false, false);
                         vTaskDelay(pdMS_TO_TICKS(250));
                     }
                 }
@@ -243,7 +228,7 @@ void frame_set_time() {
                 col = 14;
                 while (true) {
                     sprintf(string_time, "%02d", datetime_aux.tm_min);
-                    write_lcd(string_time, row, col, false, false);
+                    display_lcd_16x2_write(string_time, row, col, false, false);
 
                     if (xQueueReceive(queue_button, &receive_action, pdMS_TO_TICKS(500))) {
                         if (receive_action->button_num == BUTTON_CIMA) {
@@ -259,7 +244,7 @@ void frame_set_time() {
                                 datetime_aux.tm_min--;
                             }
                         } else if (receive_action->button_num == BUTTON_MODO) {
-                            DS3231_DateTime_Manager_set_time(&datetime_aux);
+                            date_time_manager_set_date_time(&datetime_aux);
                             option=2;
                             next_frame = false;
                             break;
@@ -268,7 +253,7 @@ void frame_set_time() {
                             break;
                         }
                     } else {
-                        write_lcd("  ", row, col, false, false);
+                        display_lcd_16x2_write("  ", row, col, false, false);
                         vTaskDelay(pdMS_TO_TICKS(250));
                     }
                 }
@@ -279,30 +264,37 @@ void frame_set_time() {
 
 // tela inicial
 void frame_initial() {
+    current_nested_frame = 1;
+
     ESP_LOGI(MENU, "FRAME INICIAL");
     
-    DS3231_DateTime_Manager_task_notify_add(&myTaskHandle);
-
-    ESP_ERROR_CHECK(DS3231_DateTime_Manager_get_date_time(&datetime_aux));
     QueueHandle_t queue_button = find_queue((uint32_t)BUTTON_VOLTAR);
 
-    current_nested_frame = 1;
-    write_lcd(week[datetime_aux.tm_wday], 0, 11, true, false);
+    date_time_manager_start_alarm(EVERY_SECOND);
 
-    sprintf(string_time, "%02d-%02d-", datetime_aux.tm_mday, datetime_aux.tm_mon);
-    write_lcd(string_time, 0, 0, false, false);
+    date_time_manager_task_notify_add(&myTaskHandle);
+
+    ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+
+    ESP_ERROR_CHECK(date_time_manager_get_date_time(&datetime_aux));
+   
+    display_lcd_16x2_clear();
+
+    sprintf(string_time, "%02d-%02d-", datetime_aux.tm_mday, (datetime_aux.tm_mon +1));
+    display_lcd_16x2_write(string_time, 0, 1, false, false);
+
+    display_lcd_16x2_write(week[datetime_aux.tm_wday], 0, 12, false, false);
+
 
     sprintf(string_time, "%04d", (datetime_aux.tm_year + 1900));
-    write_lcd(string_time, 0, 6, false, false);
+    display_lcd_16x2_write(string_time, 0, 7, false, false);
 
     sprintf(string_time, "%02d:%02d:%02d", datetime_aux.tm_hour, datetime_aux.tm_min, datetime_aux.tm_sec);
-    write_lcd(string_time, 1, 0, false, false);
+    display_lcd_16x2_write(string_time, 1, 4, false, false);
 
-    uint32_t ret_notify = 0;
     ESP_LOGI(MENU, "ANTES DE WHILE");
     
     while (true) {
-
         if(xQueueReceive(queue_button, &receive_action, 0)){
             
             // avanca para o frame de configurar timer
@@ -316,14 +308,14 @@ void frame_initial() {
                 break;
             }
         }
+        
+        if(((uint32_t) ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(500))) != 0){
 
-        ret_notify = (uint32_t) ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(500));
-        if(ret_notify != 0){
-            ESP_ERROR_CHECK(DS3231_DateTime_Manager_get_date_time(&datetime_aux));
+            ESP_ERROR_CHECK(date_time_manager_get_date_time(&datetime_aux));
             sprintf(string_time, "%02d:%02d:%02d", datetime_aux.tm_hour, datetime_aux.tm_min, datetime_aux.tm_sec);
-            write_lcd(string_time, 1, 0, false, false);
+            display_lcd_16x2_write(string_time, 1, 4, false, false);
+            
         }
-
     }
 }
 
@@ -331,7 +323,7 @@ void frame_initial() {
 void frame_set_alarme() {
     ESP_LOGI(MENU, "SET ALARME");
     QueueHandle_t queue_button = find_queue((uint32_t)BUTTON_VOLTAR);
-    DS3231_DateTime_Manager_task_notify_add(&myTaskHandle);
+    date_time_manager_task_notify_add(&myTaskHandle);
 
     bool next_frame = true;
 
@@ -341,9 +333,9 @@ void frame_set_alarme() {
     datetime_onoff.tm_min = 0;
     datetime_onoff.tm_sec = 0;
 
-    write_lcd("TIMER", 0, 0, true, false);
+    display_lcd_16x2_write("TIMER", 0, 0, true, false);
     sprintf(string_time, "%02d:%02d:%02d", datetime_onoff.tm_hour, datetime_onoff.tm_min, datetime_onoff.tm_sec);
-    write_lcd(string_time, 1, 0, false, false);
+    display_lcd_16x2_write(string_time, 1, 0, false, false);
 
     while (next_frame) {
         switch (current_nested_frame) {
@@ -352,7 +344,7 @@ void frame_set_alarme() {
                 col = 0;
                 while (true) {
                     sprintf(string_time, "%02d", datetime_onoff.tm_hour);
-                    write_lcd(string_time, row, col, false, false);
+                    display_lcd_16x2_write(string_time, row, col, false, false);
 
                     if (xQueueReceive(queue_button, &receive_action, pdMS_TO_TICKS(500))) {
                         if (receive_action->button_num == BUTTON_CIMA) {
@@ -371,13 +363,13 @@ void frame_set_alarme() {
                             current_nested_frame++;
                             break;
                         } else if (receive_action->button_num == BUTTON_VOLTAR) {
-                            DS3231_DateTime_Manager_task_notify_remove(&myTaskHandle);
+                            date_time_manager_task_notify_remove(&myTaskHandle);
                             option--;
                             next_frame = false;
                             break;
                         }
                     } else {
-                        write_lcd("  ", row, col, false, false);
+                        display_lcd_16x2_write("  ", row, col, false, false);
                         vTaskDelay(pdMS_TO_TICKS(250));
                     }
                 }
@@ -388,7 +380,7 @@ void frame_set_alarme() {
                 col = 3;
                 while (true) {
                     sprintf(string_time, "%02d", datetime_onoff.tm_min);
-                    write_lcd(string_time, row, col, false, false);
+                    display_lcd_16x2_write(string_time, row, col, false, false);
 
                     if (xQueueReceive(queue_button, &receive_action, pdMS_TO_TICKS(500))) {
                         if (receive_action->button_num == BUTTON_CIMA) {
@@ -411,7 +403,7 @@ void frame_set_alarme() {
                             break;
                         }
                     } else {
-                        write_lcd("  ", row, col, false, false);
+                        display_lcd_16x2_write("  ", row, col, false, false);
                         vTaskDelay(pdMS_TO_TICKS(250));
                     }
                 }
@@ -422,7 +414,7 @@ void frame_set_alarme() {
                 col = 6;
                 while (true) {
                     sprintf(string_time, "%02d", datetime_onoff.tm_sec);
-                    write_lcd(string_time, row, col, false, false);
+                    display_lcd_16x2_write(string_time, row, col, false, false);
 
                     if (xQueueReceive(queue_button, &receive_action, pdMS_TO_TICKS(500))) {
                         if (receive_action->button_num == BUTTON_CIMA) {
@@ -445,7 +437,7 @@ void frame_set_alarme() {
                             break;
                         }
                     } else {
-                        write_lcd("  ", row, col, false, false);
+                        display_lcd_16x2_write("  ", row, col, false, false);
                         vTaskDelay(pdMS_TO_TICKS(250));
                     }
                 }
@@ -453,15 +445,15 @@ void frame_set_alarme() {
             
             case 4:  // contagem regressiva
                 sprintf(string_time, "%c", ALARME_SYMBOL);
-                write_lcd(string_time, 1, 15, false, false);
+                display_lcd_16x2_write(string_time, 1, 15, false, false);
 
                 while (datetime_onoff.tm_hour >= 0) {
 
                     sprintf(string_time, "%02d:%02d:", datetime_onoff.tm_hour, datetime_onoff.tm_min);
-                    write_lcd(string_time, 1, 0, false, false);
+                    display_lcd_16x2_write(string_time, 1, 0, false, false);
 
                     sprintf(string_time, "%02d", datetime_onoff.tm_sec);
-                    write_lcd(string_time, 1, 6, false, false);
+                    display_lcd_16x2_write(string_time, 1, 6, false, false);
 
                     // Aguarda 1 segundo
                     ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
@@ -483,7 +475,7 @@ void frame_set_alarme() {
 
                     // Se o tempo acabou, interrompe o loop
                     if (datetime_onoff.tm_hour == 0 && datetime_onoff.tm_min == 0 && datetime_onoff.tm_sec == 0){
-                        DS3231_DateTime_Manager_task_notify_remove(&myTaskHandle);
+                        date_time_manager_task_notify_remove(&myTaskHandle);
                         option=2;
                         next_frame = false;
                         break;
@@ -494,7 +486,7 @@ void frame_set_alarme() {
     }
 }
 
-void menu_option() {
+void menu(void *params) {
     myTaskHandle = xTaskGetHandle("menu");
     
     while (true) {
@@ -515,5 +507,11 @@ void menu_option() {
                 printf("Invalid option. Please try again.\n");
                 break;
         }
+    }
+}
+
+void menu_init() {
+    if (xTaskCreate(menu, "menu", configMINIMAL_STACK_SIZE * 10, NULL, 4, NULL) != pdPASS) {
+        ESP_LOGI(MENU, "The task was not created!");
     }
 }

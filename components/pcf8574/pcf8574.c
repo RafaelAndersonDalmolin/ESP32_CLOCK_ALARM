@@ -35,8 +35,6 @@
 #include <esp_idf_lib_helpers.h>
 #include "pcf8574.h"
 
-#define I2C_FREQ_HZ 100000
-
 #define CHECK(x) do { esp_err_t __; if ((__ = x) != ESP_OK) return __; } while (0)
 #define CHECK_ARG(VAL) do { if (!(VAL)) return ESP_ERR_INVALID_ARG; } while (0)
 #define BV(x) (1 << (x))
@@ -65,17 +63,17 @@ static esp_err_t write_port(i2c_dev_t *dev, uint8_t val)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-esp_err_t pcf8574_init_desc(i2c_dev_t *dev, uint8_t addr, i2c_port_t port, gpio_num_t sda_gpio, gpio_num_t scl_gpio)
+esp_err_t pcf8574_init_desc(i2c_dev_t *dev)
 {
     CHECK_ARG(dev);
-    CHECK_ARG(addr & 0x20);
+    CHECK_ARG(CONFIG_PCF8574_I2C_ADDR & 0x20);
 
-    dev->port = port;
-    dev->addr = addr;
-    dev->cfg.sda_io_num = sda_gpio;
-    dev->cfg.scl_io_num = scl_gpio;
+    dev->port = CONFIG_PCF8574_I2C_PORT;
+    dev->addr = CONFIG_PCF8574_I2C_ADDR;
+    dev->cfg.sda_io_num = CONFIG_PCF8574_I2C_SDA;
+    dev->cfg.scl_io_num = CONFIG_PCF8574_I2C_SCL;
 #if HELPER_TARGET_IS_ESP32
-    dev->cfg.master.clk_speed = I2C_FREQ_HZ;
+    dev->cfg.master.clk_speed = CONFIG_PCF8574_I2C_CLOCK_HZ;
 #endif
 
     return i2c_dev_create_mutex(dev);

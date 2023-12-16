@@ -104,7 +104,7 @@ typedef enum {
  * @param scl_gpio SCL GPIO
  * @return ESP_OK to indicate success
  */
-esp_err_t ds3231_init_desc(i2c_dev_t *dev, i2c_port_t port, gpio_num_t sda_gpio, gpio_num_t scl_gpio);
+esp_err_t ds3231_init_desc(i2c_dev_t *dev);
 
 /**
  * @brief Free device descriptor

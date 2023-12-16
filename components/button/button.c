@@ -5,42 +5,9 @@
 
 #include "button.h"
 
-/**
- * @defgroup Button_Configurations Button Configurations
- * @brief Macros and constants used for button configurations.
- * @{
- */
-
-#define TIME_DEBOUNCING_US         15      /**< Debouncing time in microseconds (15ms). */
-#define POLL_TIMEOUT_US            25      /**< Polling timeout in microseconds (25ms). */
-#define AUTOREPEAT_ACTIVE_US       500     /**< Autorepeat active time in microseconds (500ms). */
-#define AUTOREPEAT_ACTION_US       250     /**< Autorepeat action time in microseconds (250ms). */
-#define LONG_PRESS_ACTION_US       2000    /**< Long press action time in microseconds (2000ms). */
-
-/** @} */
-
-/**
- * @defgroup Button_Internal_Configurations Button Internal Configurations
- * @brief Macros and constants used for internal button configurations.
- * @{
- */
-
 #define ESP_INTR_FLAG_DEFAULT      0   /**< Default flag for GPIO interrupt configuration. */
 
-/** @} */
-
-/**
- * @defgroup Button_Size_Configurations Size Configurations
- * @brief Macros used to define the size of button and queue arrays.
- * @{
- */
-
-#define SIZE_BUTTONS    5   /**< Maximum number of buttons that can be installed. */
-#define SIZE_QUEUE      10  /**< Maximum number of items that can be passed in the queue. */
-
-/** @} */
-
-static ButtonConfig buttons[SIZE_BUTTONS];  /**< Array of button configurations. */
+static ButtonConfig buttons[CONFIG_SIZE_BUTTONS];  /**< Array of button configurations. */
 volatile int size_b = 0;                   /**< Number of installed buttons. */
 
 static const char *BUTTON_TAG = "Driver Button"; /**< Tag for button driver log. */
@@ -75,7 +42,7 @@ void IRAM_ATTR HandlerISR(void* btn){
  */
 void insert_item(ButtonConfig* btn, ButtonAction action){
 
-    if( uxQueueMessagesWaitingFromISR(btn->internal.button_action_queue) < SIZE_QUEUE){
+    if( uxQueueMessagesWaitingFromISR(btn->internal.button_action_queue) < CONFIG_SIZE_QUEUE){
         ButtonNotification* notification = (ButtonNotification*) malloc(sizeof(ButtonNotification));
         notification->button_num = btn->gpio;
         notification->action = action;
@@ -104,7 +71,7 @@ void vTimerCallback(TimerHandle_t xTimer){
         // primeira vez que entra na chamada
         if (btn->internal.state == BUTTON_RELEASED){
             //muda periodo do timer
-            xTimerChangePeriod( xTimer, pdMS_TO_TICKS(POLL_TIMEOUT_US), 0 );
+            xTimerChangePeriod( xTimer, pdMS_TO_TICKS(CONFIG_POLL_TIMEOUT_US), 0 );
             //muda estado para pressionado
             // pressing just started, reset pressing/repeating time
             btn->internal.state = BUTTON_PRESSED;
@@ -114,18 +81,18 @@ void vTimerCallback(TimerHandle_t xTimer){
         }
         else{
             // increment pressing time
-            btn->internal.pressed_time += POLL_TIMEOUT_US;
+            btn->internal.pressed_time += CONFIG_POLL_TIMEOUT_US;
 
-            if(btn->autorepeat &&  (btn->internal.pressed_time >= AUTOREPEAT_ACTIVE_US)){
+            if(btn->autorepeat &&  (btn->internal.pressed_time >= CONFIG_AUTOREPEAT_ACTIVE_US)){
                 // increment repeating time
-                btn->internal.repeating_time += POLL_TIMEOUT_US;
-                if (btn->internal.repeating_time >= AUTOREPEAT_ACTION_US){
+                btn->internal.repeating_time += CONFIG_POLL_TIMEOUT_US;
+                if (btn->internal.repeating_time >= CONFIG_AUTOREPEAT_ACTION_US){
                     //reset repeating time
                     btn->internal.repeating_time = 0;
                     insert_item(btn,BUTTON_CLICKED);
                 }
             }
-            else if(btn->pressed_long && (btn->internal.pressed_time >= LONG_PRESS_ACTION_US)){
+            else if(btn->pressed_long && (btn->internal.pressed_time >= CONFIG_LONG_PRESS_ACTION_US)){
                 //stop timer
                 xTimerStop( xTimer, 0 );
                 //muda estado para liberado
@@ -159,7 +126,7 @@ void vTimerCallback(TimerHandle_t xTimer){
  * @return Reference to the button's queue if found. Otherwise, returns NULL.
  */
 QueueHandle_t find_queue(gpio_num_t gpio){
-    for(size_t i = 0; i < SIZE_BUTTONS; i++){
+    for(size_t i = 0; i < CONFIG_SIZE_BUTTONS; i++){
         if(!buttons[i].free){
             if(buttons[i].gpio == gpio){
                 return buttons[i].internal.button_action_queue;
@@ -176,7 +143,7 @@ QueueHandle_t find_queue(gpio_num_t gpio){
  * Initializes all button configuration structs as free for use.
  */
 void initializeButtons(){
-    for (size_t i = 0; i < SIZE_BUTTONS; i++) {
+    for (size_t i = 0; i < CONFIG_SIZE_BUTTONS; i++) {
         buttons[i].free = true;
     }
 }
@@ -236,8 +203,11 @@ esp_err_t config_gpio(gpio_num_t gpio, bool internal_resistors, uint8_t pressed_
  */
 esp_err_t button_install(gpio_num_t gpio, bool internal_resistors, uint8_t pressed_level, bool autorepeat, bool pressed_long, gpio_num_t shared_queue_gpio){
     
+    /* disable the default button logging ESP_LOG_NONE*/
+	esp_log_level_set(BUTTON_TAG, ESP_LOG_INFO);
+
     //capacidade do vetor de buttons é maior que numero de buttons instalados?
-    if (SIZE_BUTTONS > size_b){
+    if (CONFIG_SIZE_BUTTONS > size_b){
         //guarda posicao livre no vetor de buttons
         size_t free_position = 0;
         //ref. queue compartilhada
@@ -269,7 +239,7 @@ esp_err_t button_install(gpio_num_t gpio, bool internal_resistors, uint8_t press
         //Ao menos um botao ja foi instalado!
         else{
             //percorre o vetor de buttons
-            for(size_t i = 0; i < SIZE_BUTTONS; i++){    
+            for(size_t i = 0; i < CONFIG_SIZE_BUTTONS; i++){    
                 //verifica se a posicao no vetor esta livre para um button
                 //sempre guarda o ultima posicao de livre do vetor
                 if(buttons[i].free){
@@ -298,7 +268,7 @@ esp_err_t button_install(gpio_num_t gpio, bool internal_resistors, uint8_t press
         //Por ser o primeiro botao que estamos instalando, nao existe uma fila para compartilhar.
         //modo fila exclusiva, o parametro passado é igual a -1
         if(shared_queue_gpio == -1){
-            gpio_evt_queue = xQueueCreate(SIZE_QUEUE, sizeof(ButtonNotification*));
+            gpio_evt_queue = xQueueCreate(CONFIG_SIZE_QUEUE, sizeof(ButtonNotification*));
             if(gpio_evt_queue == NULL ){
                 ESP_LOGI(BUTTON_TAG, "Queue was not created and must not be used!");
                 return ESP_FAIL;
@@ -321,7 +291,7 @@ esp_err_t button_install(gpio_num_t gpio, bool internal_resistors, uint8_t press
 
         //create timer
         //argumentos necessarios para criar um timer para o button
-        buttons[free_position].internal.timer = xTimerCreate("timer_callback", pdMS_TO_TICKS(TIME_DEBOUNCING_US),pdTRUE,( void * ) &buttons[free_position],vTimerCallback );
+        buttons[free_position].internal.timer = xTimerCreate("timer_callback", pdMS_TO_TICKS(CONFIG_TIME_DEBOUNCING_US),pdTRUE,( void * ) &buttons[free_position],vTimerCallback );
         if(buttons[free_position].internal.timer  == NULL ){
                 ESP_LOGI(BUTTON_TAG, "Timer was not created and must not be used!");
                 vQueueDelete(gpio_evt_queue);
@@ -386,7 +356,7 @@ esp_err_t button_uninstall(gpio_num_t gpio){
 
     // mudar pino para nivel logico baixo
     if(size_b != 0){
-        for(size_t i = 0; i < SIZE_BUTTONS; i++){    
+        for(size_t i = 0; i < CONFIG_SIZE_BUTTONS; i++){    
             //verifica se a posicao no vetor esta livre para um button
             if(buttons[i].free == false){
                 if(buttons[i].gpio == gpio){
@@ -404,7 +374,7 @@ esp_err_t button_uninstall(gpio_num_t gpio){
                     else{
                         bool *shared_queue;
                         int count = 0;
-                        for(size_t j = 0; j < SIZE_BUTTONS; j++){
+                        for(size_t j = 0; j < CONFIG_SIZE_BUTTONS; j++){
                             if(buttons[j].free == false){
                                 if(buttons[j].internal.button_action_queue == buttons[i].internal.button_action_queue){
                                     shared_queue = &(buttons[j].internal.shared_queue);

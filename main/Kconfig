@@ -1,0 +1,41 @@
+menu "Main Configuration"
+
+    menu "Button GPIO Configuration"
+        config BUTTON_ACTIVATE_DEACTIVATE
+            int "GPIO for Button ACTIVATE AND DEACTIVATE"
+            range 0 39
+            default 32
+            help
+            Enter the GPIO pin number for the ACTIVATE_DEACTIVATE button.
+        
+        config BUTTON_BACK
+            int "GPIO for Button BACK"
+            range 0 39
+            default 35
+            help
+            Enter the GPIO pin number for the BACK button.
+        
+        config BUTTON_MODE
+            int "GPIO for Button MODE"
+            range 0 39
+            default 34
+            help
+            Enter the GPIO pin number for the MODE button.
+        
+        config BUTTON_DOWN
+            int "GPIO for Button DOWN"
+            range 0 39
+            default 39
+            help
+            Enter the GPIO pin number for the DOWN button.
+        
+        config BUTTON_UP
+            int "GPIO for Button UP"
+            range 0 39
+            default 36
+            help
+            Enter the GPIO pin number for the UP button.
+        
+    endmenu  # Fim do tópico "Button GPIO Configuration"
+
+endmenu # Fim do tópico principal "Central"

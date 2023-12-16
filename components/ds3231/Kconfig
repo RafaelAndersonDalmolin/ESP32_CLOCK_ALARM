@@ -1,0 +1,32 @@
+menu "DS3231 Configuration "
+    config DS3231_I2C_ADDR
+        hex "I2C address of DS3231"
+        default 0x68
+        help
+        Enter the device address DS3231
+
+    config DS3231_I2C_PORT
+        int "I2C port number of DS3231"
+        default 0
+        help
+        Enter the device port number of I2C
+
+    config DS3231_I2C_SDA
+        int "SDA GPIO Number"
+        range 0 39
+        default 21 
+        help
+        GPIO number for I2C Master data line.         
+
+    config DS3231_I2C_SCL
+        int "SCL GPIO Number"
+        default 22
+        range 0 39
+        help
+            GPIO number for I2C Master clock line.
+
+    config DS3231_I2C_CLOCK_HZ
+        int "I2C clock frequency, Hz"
+        default 400000
+
+endmenu  # Fim do tópico "DS3231 Configuration"

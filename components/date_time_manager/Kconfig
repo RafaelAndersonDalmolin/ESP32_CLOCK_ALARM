@@ -1,0 +1,16 @@
+menu "Datatimer manager Configuration"
+    config TIME_DEBOUNCING_US
+        int "Debouncing time in milliseconds"
+        default 15
+        help
+        Enter the debouncing time in milliseconds for button presses.
+        
+    config SIZE_IDENTIFIERS
+        int "Maximum nunber of tasks that can be notified"
+        default 5
+
+    config GPIO_ALARM
+        int "Gpio for alarm interruption"
+        default 18
+
+endmenu  # Fim do tópico "DATATIMER Configuration"

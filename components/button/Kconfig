@@ -1,0 +1,44 @@
+menu "Button Configuration"
+    config SIZE_BUTTONS
+        int "Maximum number of buttons that can be installed"
+        range 1 10
+        default 5
+        help
+        Enter the maximum number of buttons that can be installed.
+
+    config SIZE_QUEUE
+            int "Maximum number of items that can be passed in the queue"
+            default 10
+            help
+            Enter the maximum number of items that can be passed in the queue.    
+
+    config TIME_DEBOUNCING_US
+        int "Debouncing time in milliseconds"
+        default 15
+        help
+        Enter the debouncing time in milliseconds for button presses.
+
+    config POLL_TIMEOUT_US
+        int "Check button state with time period in milliseconds"
+        default 25
+        help
+        Enter the time period in milliseconds for checking the button state.
+
+    config AUTOREPEAT_ACTIVE_US
+        int "Time required to activate the autorepeat function in milliseconds"
+        default 500
+        help
+        Enter the time in milliseconds required to activate the autorepeat function.
+
+    config AUTOREPEAT_ACTION_US
+        int "Time needed to confirm action Autorepeat in milliseconds"
+        default 200
+        help
+        Enter the time in milliseconds needed to confirm an action for autorepeat.
+
+    config LONG_PRESS_ACTION_US
+        int "Time needed to confirm action Long press in milliseconds"
+        default 2000
+        help
+        Enter the time in milliseconds needed to confirm an action for a long press.    
+endmenu

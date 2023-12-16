@@ -40,8 +40,6 @@
 #include <esp_idf_lib_helpers.h>
 #include "ds3231.h"
 
-#define I2C_FREQ_HZ 400000
-
 #define DS3231_STAT_OSCILLATOR 0x80
 #define DS3231_STAT_32KHZ      0x08
 #define DS3231_STAT_ALARM_2    0x02
@@ -87,16 +85,16 @@ static uint8_t dec2bcd(uint8_t val)
     return ((val / 10) << 4) + (val % 10);
 }
 
-esp_err_t ds3231_init_desc(i2c_dev_t *dev, i2c_port_t port, gpio_num_t sda_gpio, gpio_num_t scl_gpio)
+esp_err_t ds3231_init_desc(i2c_dev_t *dev)
 {
     CHECK_ARG(dev);
 
-    dev->port = port;
+    dev->port = CONFIG_DS3231_I2C_PORT;
     dev->addr = DS3231_ADDR;
-    dev->cfg.sda_io_num = sda_gpio;
-    dev->cfg.scl_io_num = scl_gpio;
+    dev->cfg.sda_io_num = CONFIG_DS3231_I2C_SDA;
+    dev->cfg.scl_io_num = CONFIG_DS3231_I2C_SCL;
 #if HELPER_TARGET_IS_ESP32
-    dev->cfg.master.clk_speed = I2C_FREQ_HZ;
+    dev->cfg.master.clk_speed = CONFIG_DS3231_I2C_CLOCK_HZ;
 #endif
     return i2c_dev_create_mutex(dev);
 }
