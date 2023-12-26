@@ -16,6 +16,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 #include <freertos/task.h>
 #include <freertos/semphr.h>
@@ -24,6 +25,8 @@
 
 #include <driver/gpio.h>
 #include <esp_log.h>
+#include "esp_sntp.h"
+
 
 typedef enum {
     NTP_AUTO = 0,
@@ -39,8 +42,6 @@ esp_err_t date_time_manager_init();
 
 esp_err_t date_time_manager_deinit();
 
-esp_err_t date_time_manager_start();
-
 esp_err_t date_time_manager_set_mode(update_method_t update_method);
 
 update_method_t date_time_manager_get_mode();
@@ -49,9 +50,9 @@ esp_err_t date_time_manager_start_alarm(alarm_rate_t alarm_rate);
 
 esp_err_t date_time_manager_stop_alarm();
 
-esp_err_t date_time_manager_set_date_time(struct tm *dateTime);
+esp_err_t date_time_manager_set_date_time(struct tm *DataTime);
 
-esp_err_t date_time_manager_get_date_time(struct tm *dateTime);
+esp_err_t date_time_manager_get_date_time(struct tm *DataTime);
 
 esp_err_t date_time_manager_task_notify_add(TaskHandle_t *taskToUpdateHandle);
 

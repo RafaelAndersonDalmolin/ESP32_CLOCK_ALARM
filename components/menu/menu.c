@@ -270,8 +270,6 @@ void frame_initial() {
     
     QueueHandle_t queue_button = find_queue((uint32_t)BUTTON_VOLTAR);
 
-    date_time_manager_start_alarm(EVERY_SECOND);
-
     date_time_manager_task_notify_add(&myTaskHandle);
 
     ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
@@ -309,12 +307,11 @@ void frame_initial() {
             }
         }
         
-        if(((uint32_t) ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(500))) != 0){
+        if(((uint32_t) ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(250))) != 0){
 
             ESP_ERROR_CHECK(date_time_manager_get_date_time(&datetime_aux));
             sprintf(string_time, "%02d:%02d:%02d", datetime_aux.tm_hour, datetime_aux.tm_min, datetime_aux.tm_sec);
             display_lcd_16x2_write(string_time, 1, 4, false, false);
-            
         }
     }
 }

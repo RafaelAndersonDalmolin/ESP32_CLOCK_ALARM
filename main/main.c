@@ -4,16 +4,12 @@
 
 #include "button.h"
 #include "display_lcd_16x2.h"
-#include "menu.h"
 #include "date_time_manager.h"
+#include "menu.h"
 #include "wifi_manager.h"
 
-
-#include <time.h>
-#include "esp_sntp.h"
 #include "esp_log.h"
-
-
+#include "esp_heap_caps.h"
 
 /* @brief tag used for ESP serial console messages */
 static const char* MAIN= "MAIN";
@@ -73,31 +69,11 @@ void starting_buttons(){
     }
 }
 
-// Função de callback para lidar com a atualização do RTC externo
-void sntp_time_sync_notification_cb(struct timeval *tv) {
-    struct tm timeinfo;
-    char strftime_buf[64];
-
-    // Set timezone to Standard Time and print local time
-    setenv("TZ", "BRT3", 1);
-    tzset();
-    localtime_r(&tv->tv_sec, &timeinfo);
-    strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
-    ESP_LOGI(MAIN, "The current date/time in Chapeco-SC is: %s", strftime_buf);
-    // Aqui você terá que implementar a lógica para enviar a struct tm para o RTC externo
-    // Substitua rtc_set_time com a função correta para atualizar o RTC externo
-    ESP_ERROR_CHECK(date_time_manager_set_date_time(&timeinfo));
-
-}
-
-void initialize_sntp(void) {
-    sntp_setoperatingmode(SNTP_OPMODE_POLL);
-    sntp_setservername(0, "pool.ntp.org"); // Servidor NTP a ser utilizado
-    sntp_set_time_sync_notification_cb(sntp_time_sync_notification_cb); // Define a função de callback
-    sntp_init();
-}
 
 int app_main() {
+    
+    /* your code should go here. Here we simply create a task on core 2 that monitors free heap memory */
+	xTaskCreatePinnedToCore(&monitoring_task, "monitoring_task", 2048, NULL, 1, NULL, 1);
     
     starting_buttons();
 
@@ -105,22 +81,17 @@ int app_main() {
 
     display_lcd_16x2_init();    
 
-    ESP_ERROR_CHECK(date_time_manager_init());
-    // date_time_manager_set_mode(); manual ou sntp
-    // date_time_manager_start_alarm(EVERY_SECOND);
+    ESP_ERROR_CHECK(date_time_manager_init());// inicia no modo manual_user
+
+    date_time_manager_start_alarm(EVERY_SECOND);
 
     /* start the wifi manager */
 	wifi_manager_start();
 
-    /* your code should go here. Here we simply create a task on core 2 that monitors free heap memory */
-	xTaskCreatePinnedToCore(&monitoring_task, "monitoring_task", 2048, NULL, 1, NULL, 1);
-    //   
-    initialize_sntp();
-
-    vTaskDelay(20000 / portTICK_PERIOD_MS);
-
     menu_init();
 
+    vTaskDelay(15000 / portTICK_PERIOD_MS);
+    date_time_manager_set_mode(NTP_AUTO);
 
     return 0;
 }

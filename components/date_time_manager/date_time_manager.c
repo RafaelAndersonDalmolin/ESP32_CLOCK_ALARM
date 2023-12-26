@@ -19,7 +19,7 @@ static struct tm CurrentDateTime = {
 };
 
 //configuration DateTime Manager
-static SemaphoreHandle_t dateTimeMutex = NULL; //!< Device mutex dateTime 
+static SemaphoreHandle_t dateTimeMutex = NULL; //!< Device mutex DataTime 
 static TimerHandle_t Timer_Alarm = NULL;       //!< timer para debouncing
 static update_method_t update_method = MANUAL_USER;
 static bool installed = false;
@@ -31,7 +31,7 @@ static i2c_dev_t ds3231;
 static TaskHandle_t *taskHandle[CONFIG_SIZE_IDENTIFIERS];
 static short int size_taskHandle = 0;    
 
-void IRAM_ATTR date_time_manager_isr_alarm(void* arg){
+void IRAM_ATTR date_time_manager_isr_alarm(void* arg){ //ok
     //desabilitar interrupcao do pino
     esp_err_t err = gpio_isr_handler_remove((gpio_num_t) arg);
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
@@ -43,7 +43,7 @@ void IRAM_ATTR date_time_manager_isr_alarm(void* arg){
     }
 }
 
-void date_time_manager_cb_timer_alarm(TimerHandle_t xTimer){
+void date_time_manager_cb_timer_alarm(TimerHandle_t xTimer){ //ok
 
     esp_err_t err = ESP_OK;
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
@@ -73,27 +73,34 @@ void date_time_manager_cb_timer_alarm(TimerHandle_t xTimer){
     err = gpio_isr_handler_add(gpio_alarm, date_time_manager_isr_alarm, (void*) gpio_alarm);
 }
 
-esp_err_t date_time_manager_set_date_time(struct tm *dateTime){
-    return ds3231_set_time(&ds3231, dateTime);
+esp_err_t init_config_ds3231(){ //ok
+    //inclui zeros na regiao de memoria da variavel do device i2c
+        memset(&ds3231, 0, sizeof(i2c_dev_t));
+        //inicia descritor do RTC ds3231
+        return ds3231_init_desc(&ds3231);
 }
 
-esp_err_t date_time_manager_get_date_time(struct tm *dateTime){
+esp_err_t date_time_manager_set_date_time(struct tm *DataTime){ //ok
+    return ds3231_set_time(&ds3231, DataTime);
+}
+
+esp_err_t date_time_manager_get_date_time(struct tm *DataTime){ //ok
     if (xSemaphoreTake(dateTimeMutex, portMAX_DELAY)) {
-        dateTime->tm_sec =  CurrentDateTime.tm_sec; //representa os segundos de 0 a 59
-        dateTime->tm_min = CurrentDateTime.tm_min;  //representa os minutos de 0 a 59
-        dateTime->tm_hour = CurrentDateTime.tm_hour; //representa as horas de 0 a 23
-        dateTime->tm_wday = CurrentDateTime.tm_wday;  //dia da semana de 0 (domingo) até 6 (sábado)
-        dateTime->tm_mday = CurrentDateTime.tm_mday;  //dia do mês de 1 a 31
-        dateTime->tm_mon = CurrentDateTime.tm_mon;  //representa os meses do ano de 0 a 11
-        dateTime->tm_year = CurrentDateTime.tm_year; //representa o ano a partir de 1900
-        dateTime->tm_yday = CurrentDateTime.tm_yday;  // dia do ano de 1 a 365
-        dateTime->tm_isdst = CurrentDateTime.tm_isdst; //indica horário de verão se for diferente de zero
+        DataTime->tm_sec =  CurrentDateTime.tm_sec; //representa os segundos de 0 a 59
+        DataTime->tm_min = CurrentDateTime.tm_min;  //representa os minutos de 0 a 59
+        DataTime->tm_hour = CurrentDateTime.tm_hour; //representa as horas de 0 a 23
+        DataTime->tm_wday = CurrentDateTime.tm_wday;  //dia da semana de 0 (domingo) até 6 (sábado)
+        DataTime->tm_mday = CurrentDateTime.tm_mday;  //dia do mês de 1 a 31
+        DataTime->tm_mon = CurrentDateTime.tm_mon;  //representa os meses do ano de 0 a 11
+        DataTime->tm_year = CurrentDateTime.tm_year; //representa o ano a partir de 1900
+        DataTime->tm_yday = CurrentDateTime.tm_yday;  // dia do ano de 1 a 365
+        DataTime->tm_isdst = CurrentDateTime.tm_isdst; //indica horário de verão se for diferente de zero
         xSemaphoreGive(dateTimeMutex);
     }
     return ESP_OK;
 }
 
-esp_err_t date_time_manager_task_notify_add(TaskHandle_t *taskToUpdateHandle){
+esp_err_t date_time_manager_task_notify_add(TaskHandle_t *taskToUpdateHandle){ ///ok
     
     for (int i = 0; i < CONFIG_SIZE_IDENTIFIERS; i++) {
         if(taskHandle[i] == NULL){
@@ -102,35 +109,24 @@ esp_err_t date_time_manager_task_notify_add(TaskHandle_t *taskToUpdateHandle){
             return ESP_OK;
         }
     }
-    printf("falha ao add taskHandle_t\n");
     return ESP_FAIL;
 }
 
-esp_err_t date_time_manager_task_notify_remove(TaskHandle_t *taskToUpdateHandle){
+esp_err_t date_time_manager_task_notify_remove(TaskHandle_t *taskToUpdateHandle){ //ok
     
     for (int i = 0; i < CONFIG_SIZE_IDENTIFIERS; i++) {
-        printf("taskHandle_t for\n");
         if(taskHandle[i] != NULL){
             if(taskHandle[i] == taskToUpdateHandle){
                 taskHandle[i] = NULL;
                 size_taskHandle --;
-                printf("taskHandle_t remove\n");
                 return ESP_OK;
             }
         }
     }
-    printf("falha ao remove taskHandle_t\n");
     return ESP_FAIL;
 }
 
-esp_err_t init_config_ds3231(){
-    //inclui zeros na regiao de memoria da variavel do device i2c
-        memset(&ds3231, 0, sizeof(i2c_dev_t));
-        //inicia descritor do RTC ds3231
-        return ds3231_init_desc(&ds3231);
-}
-
-static esp_err_t config_gpio_alarm(gpio_num_t gpio){
+static esp_err_t config_gpio_alarm(gpio_num_t gpio){ //ok
     
     esp_err_t err = ESP_OK;
     uint64_t pin_bit_mask = (1ULL<<gpio);
@@ -179,7 +175,7 @@ static esp_err_t config_gpio_alarm(gpio_num_t gpio){
     return err;
 }
 
-esp_err_t date_time_manager_start_alarm(alarm_rate_t alarm_rate){
+esp_err_t date_time_manager_start_alarm(alarm_rate_t alarm_rate){ //ok
 
     esp_err_t err = config_gpio_alarm(CONFIG_GPIO_ALARM);
     //configura pino para interrupcao gerada pelo alarme
@@ -205,6 +201,63 @@ esp_err_t date_time_manager_start_alarm(alarm_rate_t alarm_rate){
     return err;
 }
 
+esp_err_t date_time_manager_stop_alarm(){ //ok
+    //desabilitar interrupcao do pino
+    esp_err_t err = gpio_isr_handler_remove((gpio_num_t) CONFIG_GPIO_ALARM);
+    if(err!= ESP_OK){
+        ESP_LOGI(DTMANAGER, "invalid argument, the ISR service has not been remove!");
+        return err;
+    }
+
+    err = ds3231_disable_alarm_ints(&ds3231, DS3231_ALARM_1);
+    err = ds3231_disable_alarm_ints(&ds3231, DS3231_ALARM_2);
+    err = ds3231_clear_alarm_flags(&ds3231, DS3231_ALARM_BOTH);
+
+    return err;
+}
+
+// Função de callback para lidar com a atualização do RTC externo
+static void sntp_time_sync_notification_cb(struct timeval *tv) { //ok
+    struct tm timeinfo;
+    char strftime_buf[64];
+
+    // Set timezone to Standard Time and print local time
+    setenv("TZ", "BRT3", 1);
+    tzset();
+    localtime_r(&tv->tv_sec, &timeinfo);
+    strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
+    ESP_LOGI(DTMANAGER, "The current date/time in Chapeco-SC is: %s", strftime_buf);
+    ESP_ERROR_CHECK(date_time_manager_set_date_time(&timeinfo));
+    // float temp;
+
+    // if (ds3231_get_temp_float(&ds3231, &temp) != ESP_OK){
+    //     ESP_LOGI(DTMANAGER,"Could not get temperature");
+    // }
+    // ESP_LOGI(DTMANAGER, "The temperature current in Chapeco-SC is: %.2f deg Cel", temp);
+
+}
+
+esp_err_t date_time_manager_set_mode(update_method_t update_method){
+    if(update_method == NTP_AUTO){
+        sntp_setoperatingmode(SNTP_OPMODE_POLL);
+        sntp_setservername(0, "pool.ntp.org"); // Servidor NTP a ser utilizado
+        sntp_set_time_sync_notification_cb(sntp_time_sync_notification_cb); // Define a função de callback
+        sntp_init();
+        update_method = NTP_AUTO;
+    }
+    if(update_method == MANUAL_USER){
+        if(esp_sntp_enabled == true){
+            esp_sntp_stop();
+        }
+        update_method = MANUAL_USER;
+    }
+    return ESP_OK;
+}
+
+update_method_t date_time_manager_get_mode(){
+    return update_method;
+}
+
 esp_err_t date_time_manager_init(){
     
     if(installed == false){
@@ -222,7 +275,7 @@ esp_err_t date_time_manager_init(){
         dateTimeMutex = xSemaphoreCreateMutex();
         if(dateTimeMutex == NULL ){
             ESP_LOGI(DTMANAGER, "The semaphore was not created!");
-            ESP_ERROR_CHECK(ds3231_free_desc(&ds3231));
+            ds3231_free_desc(&ds3231);
             return ESP_FAIL;
         }
 
@@ -230,11 +283,9 @@ esp_err_t date_time_manager_init(){
         if(Timer_Alarm == NULL ){
             ESP_LOGI(DTMANAGER, "The timer debounce was not created!");
             vSemaphoreDelete(dateTimeMutex);
-            ESP_ERROR_CHECK(ds3231_free_desc(&ds3231));
+            ds3231_free_desc(&ds3231);
             return ESP_FAIL;
         }  
-
-        //adicionar true em install
         installed = true;
         return ESP_OK;
     }
@@ -246,16 +297,19 @@ esp_err_t date_time_manager_init(){
 
 esp_err_t date_time_manager_deinit(){
 
+    date_time_manager_set_mode(MANUAL_USER);
+    date_time_manager_stop_alarm();
+    ds3231_free_desc(&ds3231);
+    vSemaphoreDelete(dateTimeMutex);
+    xTimerDelete(Timer_Alarm,0);
+
     for (int i = 0; i < CONFIG_SIZE_IDENTIFIERS; i++) {
-        printf("taskHandle_t uninstall\n");
         if(taskHandle[i] != NULL){
             taskHandle[i] = NULL;
             size_taskHandle --;
-            printf("taskHandle_t remove\n");
         }
     }
-    printf("remove all taskHandle_t\n");
-
+    
+    installed = false;
     return ESP_OK;
 }
-

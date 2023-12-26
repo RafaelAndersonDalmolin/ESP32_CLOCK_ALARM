@@ -1,0 +1,8 @@
+# Name,   Type, SubType, Offset,  Size, Flags
+# Note: Here we give offset to so is for the bootloader and then is for secure boot hash storage
+nvs,      data, nvs,     0xb000,  0x4000,
+phy_init, data, phy,      ,        0x1000
+factory,  app,  factory,  ,        1M
+otadata,  data, ota,      ,        0x2000
+ota_0,    app,  ota_0,    ,        1M
+ota_1,    app,  ota_1,    ,        1M
