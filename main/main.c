@@ -27,7 +27,7 @@ void starting_buttons(){
     uint8_t count = 0;
 
     while((err != ESP_OK) && (count < 5)){
-        // first button, WILDCARD button connected between GPIO and GND, (PULL DOWN)
+        // first button, WILDCARD button connected between GPIO and GND, (PULL UP EXTERNO)
         err = button_install(CONFIG_BUTTON_ACTIVATE_DEACTIVATE,false,0,false,false,-1);
         if( err != ESP_OK){
             ESP_LOGI(MAIN, "error installing button %d!",CONFIG_BUTTON_ACTIVATE_DEACTIVATE);
@@ -35,7 +35,7 @@ void starting_buttons(){
             continue;
         }
 
-        // second button, BACK button connected between GPIO and GND, (PULL DOWN)
+        // second button, BACK button connected between GPIO and GND, (PULL UP EXTERNO)
         err = button_install(CONFIG_BUTTON_BACK,false,0,false,false,CONFIG_BUTTON_ACTIVATE_DEACTIVATE);
         if( err != ESP_OK){
             ESP_LOGI(MAIN, "error installing button %d!",CONFIG_BUTTON_BACK);
@@ -43,7 +43,7 @@ void starting_buttons(){
             continue;
         }
 
-        // third button, MODE button connected between GPIO and GND, (PULL DOWN)
+        // third button, MODE button connected between GPIO and GND, (PULL UP EXTERNO)
         err = button_install(CONFIG_BUTTON_MODE,false,0,false,true,CONFIG_BUTTON_ACTIVATE_DEACTIVATE);
         if( err != ESP_OK){
             ESP_LOGI(MAIN, "error installing button %d!",CONFIG_BUTTON_MODE);
@@ -51,7 +51,7 @@ void starting_buttons(){
             continue;
         }
 
-        // fourth button, BACK button connected between GPIO and GND, (PULL DOWN)
+        // fourth button, BACK button connected between GPIO and GND, (PULL UP EXTERNO)
         err = button_install(CONFIG_BUTTON_DOWN,false,0,true,false,CONFIG_BUTTON_ACTIVATE_DEACTIVATE);
         if( err != ESP_OK){
             ESP_LOGI(MAIN, "error installing button %d!",CONFIG_BUTTON_DOWN);
@@ -59,7 +59,7 @@ void starting_buttons(){
             continue;
         }
 
-        // fifth button, BACK button connected between GPIO and GND, (PULL DOWN)
+        // fifth button, BACK button connected between GPIO and GND, (PULL UP EXTERNO)
         err = button_install(CONFIG_BUTTON_UP,false,0,true,false,CONFIG_BUTTON_ACTIVATE_DEACTIVATE);
         if( err != ESP_OK){
             ESP_LOGI(MAIN, "error installing button %d!",CONFIG_BUTTON_UP);
@@ -85,13 +85,13 @@ int app_main() {
 
     date_time_manager_start_alarm(EVERY_SECOND);
 
-    /* start the wifi manager */
-	wifi_manager_start();
+    // /* start the wifi manager */
+	// wifi_manager_start();
 
     menu_init();
 
-    vTaskDelay(15000 / portTICK_PERIOD_MS);
-    date_time_manager_set_mode(NTP_AUTO);
+    // vTaskDelay(15000 / portTICK_PERIOD_MS);
+    // date_time_manager_set_mode(NTP_AUTO);
 
     return 0;
 }

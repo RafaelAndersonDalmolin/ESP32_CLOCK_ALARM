@@ -46,7 +46,6 @@ void upload_character(){
 
 void display_lcd_16x2_init(){
     memset(&pcf8574, 0, sizeof(i2c_dev_t));
-    
     ESP_ERROR_CHECK(pcf8574_init_desc(&pcf8574));
     ESP_ERROR_CHECK(hd44780_init(&display_lcd));
     hd44780_switch_backlight(&display_lcd, true);

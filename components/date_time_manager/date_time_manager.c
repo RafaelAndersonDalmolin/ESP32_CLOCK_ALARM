@@ -184,7 +184,7 @@ esp_err_t date_time_manager_start_alarm(alarm_rate_t alarm_rate){ //ok
         return ESP_ERR_INVALID_ARG;
     }
 
-    //configura alarme periodico por segundo
+    //configura alarme periodico por EVERY_SECOND
     if(alarm_rate == EVERY_SECOND){
         err = ds3231_disable_alarm_ints(&ds3231, DS3231_ALARM_2);
         err = ds3231_set_alarm(&ds3231, DS3231_ALARM_1, &CurrentDateTime, DS3231_ALARM1_EVERY_SECOND, 0, 0);
@@ -238,6 +238,7 @@ static void sntp_time_sync_notification_cb(struct timeval *tv) { //ok
 }
 
 esp_err_t date_time_manager_set_mode(update_method_t update_method){
+    
     if(update_method == NTP_AUTO){
         sntp_setoperatingmode(SNTP_OPMODE_POLL);
         sntp_setservername(0, "pool.ntp.org"); // Servidor NTP a ser utilizado
@@ -246,7 +247,7 @@ esp_err_t date_time_manager_set_mode(update_method_t update_method){
         update_method = NTP_AUTO;
     }
     if(update_method == MANUAL_USER){
-        if(esp_sntp_enabled == true){
+        if(esp_sntp_enabled() == true){
             esp_sntp_stop();
         }
         update_method = MANUAL_USER;
